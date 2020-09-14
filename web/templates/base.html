@@ -1,0 +1,17 @@
+<html>
+	<head>
+        {% block head %}
+        <meta charset="UTF-8">
+        <title>{% block title %}WW Verify | {{ title }}{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.5.2/pulse/bootstrap.min.css" integrity="sha512-7R5N+nFRd7BDF1jj6h6fZHJVxx6NZTBa1Qy0CvwDQ/I2XzC1ETM7MShkA+QLXlERDcErH8bkW0G/XOw0Opd/ww==" crossorigin="anonymous" />
+        {% endblock %}
+	</head>
+	<body>
+                <div class="container pt-5">
+                        {% block content %}
+                        {% endblock %}
+                </div>
+	</body>
+</html>

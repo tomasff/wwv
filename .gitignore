@@ -1,0 +1,6 @@
+logo.psd
+database/data/
+bot/bot_env/
+web/web_env/
+.env
+__pycache__

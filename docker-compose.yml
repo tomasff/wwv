@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  database:
+    image: mongo:4.4.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: test
+    volumes:
+      - ./database/data:/data/db
+  web:
+    build:
+      context: ./
+      dockerfile: ./web/Dockerfile
+    links:
+      - database
+    ports:
+      - "80:80"
+    env_file:
+      - ./web/.env
+  bot:
+    build:
+      context: ./
+      dockerfile: ./bot/Dockerfile
+    env_file:
+      - ./bot/.env
+    links:
+      - database

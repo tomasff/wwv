@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Oops, an error occurred!</h1>
+<hr>
+<p>{{ message }}</p>
+{% if contact %}
+<p>Please contact <code>wwv &lt;at&gt; tomff &lt;dot&gt; com</code> via email.</p>
+{% endif %}
+{% endblock %}

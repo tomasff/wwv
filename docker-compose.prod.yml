@@ -2,6 +2,7 @@ version: '3.8'
 services:
   web:
     restart: always
+    network_mode: host
     build:
       context: ./
       dockerfile: ./web/Dockerfile
@@ -11,6 +12,7 @@ services:
       - ./web/.env
   bot:
     restart: always
+    network_mode: host
     build:
       context: ./
       dockerfile: ./bot/Dockerfile

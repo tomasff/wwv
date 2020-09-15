@@ -30,8 +30,21 @@ class VerificationCog(Cog):
 
     @commands.command()
     async def verify(self, ctx):
-        verify_embed = self._build_base_embed(description='Click on the link below to complete the verification')
+        verify_embed = self._build_base_embed()
         verify_embed.set_thumbnail(url=self.bot.user.avatar_url)
+
+        what_next_msg = ('Upon clicking on the link below you will be redirected to a page where you can'
+                        ' '
+                        'consent if you allow WW Verify to verify your affiliation with the University.')
+        
+        data_stored_msg = ('WW Verify stores very little information: a cryptographic hash of your student ID'
+                        ' '
+                        '(necessary so that a Warwick ITS account can only be used to verify one Discord account)'
+                        ' '
+                        'and your Discord unique ID.')
+
+        verify_embed.add_field(name='What next?', inline=False, value=what_next_msg)
+        verify_embed.add_field(name='What data do we store?', inline=False, value=data_stored_msg)
 
         if not self._members.find_record_for_member(ctx.author):
             record = self._members.add_member(ctx.author)
@@ -40,7 +53,6 @@ class VerificationCog(Cog):
             record = self._members.find_record_for_member(ctx.author)
             verify_embed.add_field(name='Link', value=self._build_verify_link(record['_id']))
 
-        verify_embed.add_field(name='Privacy Policy', value=f'For more information on how your information is used `{self.base_url}/privacy`', inline=False)
         await ctx.author.send(embed=verify_embed)
 
     @commands.command()

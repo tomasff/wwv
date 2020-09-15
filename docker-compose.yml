@@ -9,6 +9,10 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: test
     volumes:
       - ./database/data:/data/db
+  redis:
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
   web:
     build:
       context: ./

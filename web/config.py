@@ -14,3 +14,6 @@ class Config:
     MONGO_URI = os.getenv('MONGO_URI')
     CONSUMER_SECRET = os.getenv('CONSUMER_SECRET')
     CONSUMER_KEY = os.getenv('CONSUMER_KEY')
+    REDIS_HOSTNAME = os.getenv('REDIS_HOSTNAME')
+    REDIS_PORT = int(os.getenv('REDIS_PORT'))
+    REDIS_PUBSUB_CH = os.getenv('REDIS_PUBSUB_CH')

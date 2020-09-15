@@ -1,22 +1,51 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from .cog import Cog
 from discord.utils import get
+from ..utils.embeds import build_verify_embed, LOADING, ACCOUNT_VERIFIED
 
 class VerificationCog(Cog):
-    def __init__(self, bot, base_url, members, guilds):
+    def __init__(self, bot, base_url, pubsub, verifications, members, guilds):
         super().__init__(bot, members, guilds)
 
-        self.base_url = base_url
+        self._verifics = verifications
+        self._pubsub = pubsub
+        self._base_url = base_url
+
+        self.assign_role_on_verification.start()
+
+    def cog_unload(self):
+        self._pubsub.unsubscribe()
+        self.assign_role_on_verification.cancel()
+
+    @tasks.loop(seconds=1)
+    async def assign_role_on_verification(self):
+        message = self._pubsub.get_message()
+
+        if not message:
+            return
+        
+        if message['type'] != 'message':
+            return
+
+        data = message['data'].decode('utf-8') 
+        discord_id, guild_id = data.split(',')
+
+        guild = self.bot.get_guild(int(guild_id))
+        member = guild.get_member(int(discord_id))
+
+        success = await self._add_verified_role(member, guild)
+
+        if not success:
+            await member.send('Error in setup found: invalid role id. Please contact a member of staff.')
+        else:
+            await member.send(embed=ACCOUNT_VERIFIED)
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
         record = self._members.find_record_for_member(member)
 
         if not record:
-            return
-
-        if not record['isVerified']:
             return
 
         guild = member.guild
@@ -30,30 +59,26 @@ class VerificationCog(Cog):
 
     @commands.command()
     async def verify(self, ctx):
-        verify_embed = self._build_base_embed()
-        verify_embed.set_thumbnail(url=self.bot.user.avatar_url)
+        member_record = self._members.find_record_for_member(ctx.author)
 
-        what_next_msg = ('Upon clicking on the link below you will be redirected to a page where you can'
-                        ' '
-                        'consent if you allow WW Verify to verify your affiliation with the University.')
-        
-        data_stored_msg = ('WW Verify stores very little information: a cryptographic hash of your student ID'
-                        ' '
-                        '(necessary so that a Warwick ITS account can only be used to verify one Discord account)'
-                        ' '
-                        'and your Discord unique ID.')
+        if member_record:
+            await ctx.author.send(embed=ACCOUNT_VERIFIED)
+            return
 
-        verify_embed.add_field(name='What next?', inline=False, value=what_next_msg)
-        verify_embed.add_field(name='What data do we store?', inline=False, value=data_stored_msg)
+        verif_record = self._verifics.find_record_for_member(ctx.author)
 
-        if not self._members.find_record_for_member(ctx.author):
-            record = self._members.add_member(ctx.author)
-            verify_embed.add_field(name='Link', value=self._build_verify_link(record.inserted_id))
+        if not verif_record:
+            verif_id = self._verifics.start_verification(ctx.author, ctx.guild).inserted_id
         else:
-            record = self._members.find_record_for_member(ctx.author)
-            verify_embed.add_field(name='Link', value=self._build_verify_link(record['_id']))
+            verif_id = verif_record['_id']
+
+            if verif_record['guildId'] != ctx.guild:
+                self._verifics.update_member_verification_guild(ctx.author, ctx.guild)
+
+        verify_embed = build_verify_embed(self.bot.user.avatar_url, self._build_verify_link(verif_id))
 
         await ctx.author.send(embed=verify_embed)
+        await ctx.author.send(embed=LOADING)
 
     @commands.command()
     async def check(self, ctx):
@@ -63,30 +88,17 @@ class VerificationCog(Cog):
             return
 
         if not record:
-            await ctx.channel.send('No verification proccess started! Start by typing wwv!verify')
+            await ctx.channel.send('❌ Account not verified. Verify your account by typing wwv!verify')
         else:
-            if not record['isVerified']:
-                await ctx.author.send('❌ Account not verified. Verify your account by typing wwv!verify')
-                return
+            success = await self._add_verified_role(ctx.author, ctx.guild)
 
-            role = self._get_guild_role(ctx.guild)
-
-            if not role:
+            if success:
+                await ctx.author.send(embed=ACCOUNT_VERIFIED)
+            else:
                 await ctx.channel.send('Error in setup found: invalid role id. Please contact a member of staff.')
-                return
-
-            await ctx.author.send('✅ Account verified and role added')
-            await ctx.author.add_roles(role)
 
     def _build_verify_link(self, id):
-        return f'{self.base_url}/redirect/{id}'
-
-    def _build_base_embed(self, description='', title='✅ Verification'):
-        embed = discord.Embed(title=title, colour=discord.Colour.from_rgb(91, 48, 105),
-                                description=description)
-
-        embed.set_footer(text='This is NOT an offical service from the University of Warwick')
-        return embed
+        return f'{self._base_url}/redirect/{id}'
 
     def _get_guild_role(self, guild):
         guild_record = self._guilds.find_record_for_guild(guild)
@@ -98,3 +110,12 @@ class VerificationCog(Cog):
         role = get(guild.roles, id=roleId)
 
         return role
+
+    async def _add_verified_role(self, member, guild):
+        role = self._get_guild_role(guild)
+
+        if not role:
+            return False
+
+        await member.add_roles(role)
+        return True

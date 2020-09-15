@@ -4,8 +4,9 @@ import redis
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
-from repositories.member_repo import MemberRepository
-from repositories.guild_repo import GuildRepository
+from repositories.member import MemberRepository
+from repositories.guild import GuildRepository
+from repositories.verification import VerificationRepository
 
 from .bot import wwvbot
 from .cogs.setup import SetupCog
@@ -32,8 +33,9 @@ pubsub.subscribe(os.getenv('REDIS_PUBSUB_CH'))
 
 guilds_repo = GuildRepository(database)
 members_repo = MemberRepository(database)
+verif_repo = VerificationRepository(database)
 
-wwvbot.add_cog(VerificationCog(wwvbot, os.getenv('BASE_URL'), pubsub, members_repo, guilds_repo))
+wwvbot.add_cog(VerificationCog(wwvbot, os.getenv('BASE_URL'), pubsub, verif_repo, members_repo, guilds_repo))
 _register_cog(SetupCog)
 
 wwvbot.run(os.getenv('DISCORD_TOKEN'))

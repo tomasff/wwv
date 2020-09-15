@@ -6,7 +6,8 @@ from flask_session import Session
 
 import redis
 
-from repositories.member_repo import MemberRepository
+from repositories.member import MemberRepository
+from repositories.verification import VerificationRepository
 from bson.objectid import ObjectId
 from .config import Config
 from .oauth import get_redirect_to_authorise_url, get_user_access_token, get_user_oauth_session, get_sso_attributes, get_request_token_with_callback
@@ -20,7 +21,9 @@ app.config.from_object(Config)
 r = redis.Redis(host=Config.REDIS_HOSTNAME, port=Config.REDIS_PORT, db=0)
 
 mongo = PyMongo(app)
+
 members = MemberRepository(mongo.db)
+verifications = VerificationRepository(mongo.db)
 
 app.config['SESSION_MONGODB'] = mongo.db
 
@@ -42,18 +45,15 @@ def get_begin_oauth():
     if not id:
         return render_template('error_id.html')
 
-    record = members.find_record_for_id(id)
+    record = verifications.find_record_for_id(id)
 
     if not record:
         return render_template('error_id.html')
 
-    if record['isVerified']:
-        return render_template('success.html', title='Success')
-    else:
-        request_token = get_request_token_with_callback(id, f'{Config.BASE_URL}/oauth/authorized')
-        session['request_token_secret'] = request_token['secret']
+    request_token = get_request_token_with_callback(id, f'{Config.BASE_URL}/oauth/authorized')
+    session['request_token_secret'] = request_token['secret']
 
-        return get_redirect_to_authorise_url(request_token['token'])
+    return get_redirect_to_authorise_url(request_token['token'])
 
 @app.route('/oauth/authorized')
 def get_authorised_oauth():
@@ -76,12 +76,17 @@ def get_authorised_oauth():
             contact=False)
 
     if ww_data['member'] == 'true':
-        members.verify_member(id)
-        members.set_student_id_hash(id, student_id_hash)
+        verification = verifications.find_record_for_id(id)
+        discord_id = verification['discordId']
+        guild_id = verification['guildId']
 
-        r.publish(Config.REDIS_PUBSUB_CH, 'test')
-        
+        r.publish(Config.REDIS_PUBSUB_CH, f'{discord_id},{guild_id}')
+
+        members.add_member(discord_id, student_id_hash)
+
         session.clear()
+        verifications.delete_verification(id)
+
         return render_template('success.html', title='Success')
     
     return render_template('error.html', title='Not affiliated',

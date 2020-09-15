@@ -4,11 +4,10 @@ class MemberRepository:
     def __init__(self, database):
         self._members = database.members
 
-    def add_member(self, member):
+    def add_member(self, member_id, student_id_hash):
         return self._members.insert_one({
-            'discordId': member.id,
-            'isVerified': False,
-            'studentIdHash': ''
+            'discordId': member_id,
+            'studentIdHash': student_id_hash
         })
 
     def find_record_for_member(self, member):
@@ -25,9 +24,3 @@ class MemberRepository:
         return self._members.find_one({
             'studentIdHash': hash
         })
-
-    def set_student_id_hash(self, id, hash):
-        return self._members.update_one({'_id': ObjectId(id)}, { '$set': { 'studentIdHash': hash } })
-
-    def verify_member(self, id):
-        return self._members.update_one({'_id': ObjectId(id)}, { '$set': { 'isVerified': True } })

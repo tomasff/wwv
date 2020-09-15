@@ -32,14 +32,14 @@ class VerificationCog(Cog):
         discord_id, guild_id = data.split(',')
 
         guild = self.bot.get_guild(int(guild_id))
-        user = guild.get_member(int(discord_id))
+        member = guild.get_member(int(discord_id))
 
-        success = self._add_verified_role(ctx.author, ctx.guild)
+        success = await self._add_verified_role(member, guild)
 
         if not success:
-            await user.send('Error in setup found: invalid role id. Please contact a member of staff.')
+            await member.send('Error in setup found: invalid role id. Please contact a member of staff.')
         else:
-            await user.send(embed=ACCOUNT_VERIFIED)
+            await member.send(embed=ACCOUNT_VERIFIED)
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -62,7 +62,7 @@ class VerificationCog(Cog):
         member_record = self._members.find_record_for_member(ctx.author)
 
         if member_record:
-            await ctx.author.send('✅ Your Discord account is already verified!')
+            await ctx.author.send(embed=ACCOUNT_VERIFIED)
             return
 
         verif_record = self._verifics.find_record_for_member(ctx.author)
@@ -90,7 +90,7 @@ class VerificationCog(Cog):
         if not record:
             await ctx.channel.send('❌ Account not verified. Verify your account by typing wwv!verify')
         else:
-            success = self._add_verified_role(ctx.author, ctx.guild)
+            success = await self._add_verified_role(ctx.author, ctx.guild)
 
             if success:
                 await ctx.author.send(embed=ACCOUNT_VERIFIED)
@@ -112,10 +112,10 @@ class VerificationCog(Cog):
         return role
 
     async def _add_verified_role(self, member, guild):
-        role = self._get_guild_role(ctx.guild)
+        role = self._get_guild_role(guild)
 
         if not role:
             return False
 
-        await ctx.author.add_roles(role)
+        await member.add_roles(role)
         return True

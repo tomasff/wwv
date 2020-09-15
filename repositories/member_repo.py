@@ -29,5 +29,5 @@ class MemberRepository:
     def set_student_id_hash(self, id, hash):
         return self._members.update_one({'_id': ObjectId(id)}, { '$set': { 'studentIdHash': hash } })
 
-    def verify_member(self, id, is_verified):
-        return self._members.update_one({'_id': ObjectId(id)}, { '$set': { 'isVerified': is_verified } })
+    def verify_member(self, id):
+        return self._members.update_one({'_id': ObjectId(id)}, { '$set': { 'isVerified': True } })

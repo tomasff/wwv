@@ -72,7 +72,7 @@ def get_authorised_oauth():
             contact=False)
 
     if ww_data['member'] == 'true':
-        members.verify_member(id, True)
+        members.verify_member(id)
         members.set_student_id_hash(id, student_id_hash)
 
         session.clear()

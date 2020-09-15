@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Verify your Discord account</h1>
+<hr>
+<p>By clicking the button below you will be redirected to the University of Warwick authorization page so that we can verify your affiliation status.</p>
+<p>WW Verify only stores the following data on our servers:</p>
+<ul>
+    <li>
+        a <a href="https://en.wikipedia.org/wiki/Hash_function">hash</a> of your student ID -
+        this is necessary so that a Warwick ITS account can only be used to verify one Discord account.
+    </li>
+    <li>your Discord unique ID</li>
+    <li>whether you are affiliated with the University of Warwick</li>
+</ul>
+<p>More information on how your information is used is available in our <a href="{{ url_for('get_privacy_policy') }}">privacy policy</a>.</p>
+<a type="button" class="btn btn-primary" href="{{ url_for('get_begin_oauth') }}">Verify Account</a>
+{% endblock %}

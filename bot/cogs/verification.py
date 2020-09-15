@@ -67,7 +67,7 @@ class VerificationCog(Cog):
             await ctx.author.add_roles(role)
 
     def _build_verify_link(self, id):
-        return f'{self.base_url}/oauth/begin/{id}'
+        return f'{self.base_url}/redirect/{id}'
 
     def _build_base_embed(self, description='', title='✅ Verification'):
         embed = discord.Embed(title=title, colour=discord.Colour.from_rgb(91, 48, 105),

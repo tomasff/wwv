@@ -5,6 +5,7 @@ from flask_pymongo import PyMongo
 from flask_session import Session
 
 from repositories.member_repo import MemberRepository
+from bson.objectid import ObjectId
 from .config import Config
 from .oauth import get_redirect_to_authorise_url, get_user_access_token, get_user_oauth_session, get_sso_attributes, get_request_token_with_callback
 
@@ -21,22 +22,32 @@ app.config['SESSION_MONGODB'] = mongo.db
 
 Session(app)
 
-@app.route('/oauth/begin/<id>')
-def get_begin_oauth(id):
+@app.route('/redirect/<id>')
+def get_redirect(id):
+    if not ObjectId.is_valid(id):
+        return render_template('error_id.html')
+
+    session['id'] = id
+
+    return render_template('redirect.html', title='Authorize')
+
+@app.route('/oauth/begin')
+def get_begin_oauth():
+    id = session.get('id')
+
+    if not id:
+        return render_template('error_id.html')
+
     record = members.find_record_for_id(id)
 
     if not record:
-        return render_template('error.html', title='Verification ID',
-                message='Invalid verification ID. Please obtain a valid URL using wwv!verify',
-                contact=False)
+        return render_template('error_id.html')
 
     if record['isVerified']:
         return render_template('success.html', title='Success')
     else:
         request_token = get_request_token_with_callback(id, f'{Config.BASE_URL}/oauth/authorized')
-
         session['request_token_secret'] = request_token['secret']
-        session['id'] = id
 
         return get_redirect_to_authorise_url(request_token['token'])
 

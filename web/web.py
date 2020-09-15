@@ -4,6 +4,8 @@ from flask import Flask, redirect, jsonify, request, Response, render_template, 
 from flask_pymongo import PyMongo
 from flask_session import Session
 
+import redis
+
 from repositories.member_repo import MemberRepository
 from bson.objectid import ObjectId
 from .config import Config
@@ -14,6 +16,8 @@ import hashlib
 app = Flask(__name__)
 
 app.config.from_object(Config)
+
+r = redis.Redis(host=Config.REDIS_HOSTNAME, port=Config.REDIS_PORT, db=0)
 
 mongo = PyMongo(app)
 members = MemberRepository(mongo.db)
@@ -75,6 +79,8 @@ def get_authorised_oauth():
         members.verify_member(id)
         members.set_student_id_hash(id, student_id_hash)
 
+        r.publish(Config.REDIS_PUBSUB_CH, 'test')
+        
         session.clear()
         return render_template('success.html', title='Success')
     

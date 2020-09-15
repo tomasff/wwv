@@ -1,13 +1,24 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 from .cog import Cog
 from discord.utils import get
 
 class VerificationCog(Cog):
-    def __init__(self, bot, base_url, members, guilds):
+    def __init__(self, bot, base_url, pubsub, members, guilds):
         super().__init__(bot, members, guilds)
 
-        self.base_url = base_url
+        self._pubsub = pubsub
+        self._base_url = base_url
+
+        self.assign_role_on_verification.start()
+
+    def cog_unload(self):
+        self._pubsub.unsubscribe()
+        self.assign_role_on_verification.cancel()
+
+    @tasks.loop(seconds=1)
+    async def assign_role_on_verification(self):
+        print(self._pubsub.get_message())
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -79,7 +90,7 @@ class VerificationCog(Cog):
             await ctx.author.add_roles(role)
 
     def _build_verify_link(self, id):
-        return f'{self.base_url}/redirect/{id}'
+        return f'{self._base_url}/redirect/{id}'
 
     def _build_base_embed(self, description='', title='✅ Verification'):
         embed = discord.Embed(title=title, colour=discord.Colour.from_rgb(91, 48, 105),

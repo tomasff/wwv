@@ -1,5 +1,6 @@
 import os
 
+import redis
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
@@ -24,10 +25,15 @@ mongo = MongoClient(
 
 database = mongo[os.getenv('DB_NAME')]
 
+r = redis.Redis(host=os.getenv('REDIS_HOSTNAME'), port=int(os.getenv('REDIS_PORT')), db=0)
+
+pubsub = r.pubsub()
+pubsub.subscribe(os.getenv('REDIS_PUBSUB_CH'))
+
 guilds_repo = GuildRepository(database)
 members_repo = MemberRepository(database)
 
-wwvbot.add_cog(VerificationCog(wwvbot, os.getenv('BASE_URL'), members_repo, guilds_repo))
+wwvbot.add_cog(VerificationCog(wwvbot, os.getenv('BASE_URL'), pubsub, members_repo, guilds_repo))
 _register_cog(SetupCog)
 
 wwvbot.run(os.getenv('DISCORD_TOKEN'))

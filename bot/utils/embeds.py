@@ -28,5 +28,5 @@ def build_verify_embed(thumbnail_url, link):
 
     return verify
 
-LOADING = BaseEmbed(title='Waiting for confirmation <a:loading:755494890070081656>', footer='')
-ACCOUNT_VERIFIED = BaseEmbed(title='✅ Account verified and role added', footer='')
+LOADING = BaseEmbed(title='<a:loading:755494890070081656> Waiting for confirmation')
+ACCOUNT_VERIFIED = BaseEmbed(title='✅ Account verified and role added')

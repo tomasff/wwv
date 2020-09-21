@@ -4,7 +4,7 @@ class BaseEmbed(discord.Embed):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.set_footer(text='This is NOT an offical service from the University of Warwick')
+        self.set_footer(text='This is NOT an official service from the University of Warwick')
         self.colour = discord.Colour.from_rgb(91, 48, 105)
 
 def build_verify_embed(thumbnail_url, link):

@@ -5,6 +5,4 @@
 WW Verify (short for Warwick Verify) is a Discord Bot which allows to verify if a Discord user
 is affiliated with the University of Warwick using [OAuth via Warwick ITS](https://warwick.ac.uk/services/its/servicessupport/web/sign-on/help/oauth/apis/).
 
-This project is still a work in progress.
-
 **NOTE:** This is NOT an official service from the University of Warwick

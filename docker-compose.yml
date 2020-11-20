@@ -19,6 +19,7 @@ services:
       dockerfile: ./web/Dockerfile
     links:
       - database
+      - redis
     ports:
       - "80:80"
     env_file:
@@ -30,4 +31,5 @@ services:
     env_file:
       - ./bot/.env
     links:
+      - redis
       - database

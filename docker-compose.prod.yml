@@ -2,7 +2,9 @@ version: '3.8'
 services:
   web:
     restart: always
-    network_mode: host
+    links:
+      - redis
+      - database
     build:
       context: ./
       dockerfile: ./web/Dockerfile
@@ -12,9 +14,20 @@ services:
       - ./web/.env
   bot:
     restart: always
-    network_mode: host
+    links:
+      - redis
+      - database
     build:
       context: ./
       dockerfile: ./bot/Dockerfile
     env_file:
       - ./bot/.env
+  redis:
+    image: redis:6-alpine
+  database:
+    image: mongo:4.4.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USER}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD}"
+    volumes:
+      - ./database/data:/data/db

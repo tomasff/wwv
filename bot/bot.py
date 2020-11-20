@@ -13,8 +13,11 @@ from .cogs.verification import VerificationCog
 
 from .config import Config
 
+intents = discord.Intents.default()
+intents.members = True
+
 description = 'Verify your affiliation with the University of Warwick using your ITS account'
-wwvbot = commands.Bot(command_prefix='wwv!', description=description)
+wwvbot = commands.Bot(command_prefix='wwv!', description=description, intents=intents)
 
 mongo = MongoClient(
     host=Config.DB_HOSTNAME,
